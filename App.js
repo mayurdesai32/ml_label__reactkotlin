@@ -6,7 +6,7 @@
  * @flow strict-local
  */
 
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
 import {
   SafeAreaView,
@@ -26,11 +26,11 @@ import ImageLabeling from '@react-native-ml-kit/image-labeling';
 import Toast from 'react-native-toast-message';
 const {width, height} = Dimensions.get('window');
 const App = () => {
-  let landscape = height < width;
-  console.log('landscape', landscape);
+  // let landscape = height < width;
+  // console.log('landscape', landscape);
   const [selectImage, setSelectImage] = useState(null);
   const [result, setResult] = useState(null);
-
+  const [splash, setSplash] = useState(true);
   const gallaryOptions = {
     selectionLimit: 1,
     mediaType: 'photo',
@@ -58,7 +58,6 @@ const App = () => {
       setSelectImage(tempresult.assets[0].uri);
       const labels = await ImageLabeling.label(tempresult.assets[0].uri);
       setResult(labels);
-      console.log(labels);
     } catch (error) {
       console.log(error);
       showToast('Something Went Wrong');
@@ -73,129 +72,142 @@ const App = () => {
     });
   };
 
+  useEffect(() => {
+    setTimeout(() => {
+      setSplash(false);
+    }, 2000);
+  }, []);
   return (
     <SafeAreaView style={backgroundStyle}>
+      <StatusBar barStyle={'light-content'} backgroundColor={'black'} />
+
       <ImageBackground
         source={require('./assert/brick1.jpg')}
         resizeMode="cover"
         style={styles.imageBg}
       />
-      <StatusBar barStyle={'light-content'} backgroundColor={'black'} />
 
-      <View style={styles.container}>
-        {/* <Image style={styles.frame} source={} /> */}
-        <Image
-          style={styles.frame}
-          source={
-            selectImage ? {uri: selectImage} : require('./assert/empty.jpg')
-          }
-        />
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-around',
-            marginTop: 30,
-            marginBottom: 18,
-          }}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            style={styles.btn}
-            onPress={() => onPressHandler('gallery')}>
-            <Text
-              style={{
-                textAlign: 'center',
-                color: '#fff',
-                fontSize: 20,
-              }}>
-              Gallery
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            style={styles.btn}
-            onPress={() => onPressHandler('camera')}>
-            <Text
-              style={{
-                textAlign: 'center',
-                color: '#fff',
-                fontSize: 20,
-              }}>
-              Camera
-            </Text>
-          </TouchableOpacity>
+      {splash ? (
+        <View style={styles.splash}>
+          <Text style={styles.splashText}>MD IMAGE LABEL</Text>
         </View>
-
-        {result ? (
-          <>
-            <View>
+      ) : (
+        <View style={styles.container}>
+          <Image
+            style={styles.frame}
+            source={
+              selectImage ? {uri: selectImage} : require('./assert/empty.jpg')
+            }
+          />
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-around',
+              marginTop: 65,
+              marginBottom: 18,
+            }}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              style={styles.btn}
+              onPress={() => onPressHandler('gallery')}>
               <Text
                 style={{
                   textAlign: 'center',
                   color: '#fff',
-                  fontSize: 30,
-                  fontWeight: '900',
+                  fontSize: 20,
                 }}>
-                Predicted Result
+                Gallery
               </Text>
-            </View>
-            <ScrollView vertical={true} style={styles.scrollView}>
-              {result
-                .filter(e => e.confidence > 0.5)
-                .map((e, i) => (
-                  <View
-                    key={i}
-                    style={{
-                      flexDirection: 'row',
-                      paddingLeft: 2,
-                      borderWidth: 1,
-                      borderColor: 'white',
-                      // justifyContent: 'space-between',
-                      paddingRight: 15,
-                    }}>
-                    <Text style={styles.resultText}>{i + 1}</Text>
-                    <Text
-                      style={[styles.resultText, {textTransform: 'uppercase'}]}>
-                      {e.text}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.resultText,
-                        {
-                          textAlign: 'right',
-                          backgroundColor: 'red',
-                          marginLeft: 'auto',
-                        },
-                      ]}>
-                      Cf: {e.confidence.toFixed(3)}%
-                    </Text>
-                  </View>
-                ))}
-            </ScrollView>
-          </>
-        ) : (
-          <View
-            style={{
-              color: 'white',
-              justifyContent: 'center',
-              alignSelf: 'center',
+            </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              style={styles.btn}
+              onPress={() => onPressHandler('camera')}>
+              <Text
+                style={{
+                  textAlign: 'center',
+                  color: '#fff',
+                  fontSize: 20,
+                }}>
+                Camera
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-              flex: 1,
-            }}>
-            <Text
+          {result ? (
+            <>
+              <View>
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    color: '#fff',
+                    fontSize: 30,
+                    fontWeight: '900',
+                  }}>
+                  Predicted Result
+                </Text>
+              </View>
+              <ScrollView vertical={true} style={styles.scrollView}>
+                {result
+                  .filter(e => e.confidence > 0.5)
+                  .map((e, i) => (
+                    <View
+                      key={i}
+                      style={{
+                        flexDirection: 'row',
+                        paddingLeft: 2,
+                        borderWidth: 1,
+                        borderColor: 'white',
+                        // justifyContent: 'space-between',
+                        paddingRight: 15,
+                      }}>
+                      <Text style={styles.resultText}>{i + 1}</Text>
+                      <Text
+                        style={[
+                          styles.resultText,
+                          {textTransform: 'uppercase'},
+                        ]}>
+                        {e.text}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.resultText,
+                          {
+                            textAlign: 'right',
+                            backgroundColor: 'red',
+                            marginLeft: 'auto',
+                          },
+                        ]}>
+                        Cf: {e.confidence.toFixed(3)}%
+                      </Text>
+                    </View>
+                  ))}
+              </ScrollView>
+            </>
+          ) : (
+            <View
               style={{
                 color: 'white',
-                // justifySelf: 'center',
-                // alignSelf: 'center',
-                fontSize: 30,
-                fontWeight: '700',
-                textAlign: 'center',
+                justifyContent: 'center',
+                alignSelf: 'center',
+
+                flex: 1,
               }}>
-              Please upload the image
-            </Text>
-          </View>
-        )}
-        <Toast />
-      </View>
+              <Text
+                style={{
+                  color: 'white',
+                  marginTop: -80,
+                  fontSize: 38,
+                  fontWeight: '700',
+                  textAlign: 'center',
+                }}>
+                Please upload the image
+              </Text>
+            </View>
+          )}
+          <Toast />
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -204,6 +216,29 @@ const styles = StyleSheet.create({
   container: {
     alignSelf: 'center',
   },
+
+  splash: {
+    // flex: 1,
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  splashText: {
+    // flex: 1,
+    alignSelf: 'center',
+    backgroundColor: 'white',
+    paddingHorizontal: 28,
+    paddingVertical: 20,
+    paddingTop: 35,
+    borderWidth: 8,
+    borderColor: 'red',
+    color: 'red',
+    fontSize: 30,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+
   imageBg: {
     position: 'absolute',
     justifyContent: 'center',
@@ -215,9 +250,9 @@ const styles = StyleSheet.create({
     width: 300,
     height: 250,
     backgroundColor: 'red',
-    borderWidth: 12,
+    borderWidth: 8,
     borderRadius: 15,
-    borderColor: 'green',
+    borderColor: 'black',
     marginTop: 35,
     alignSelf: 'center',
   },
