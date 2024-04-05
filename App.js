@@ -103,7 +103,7 @@ const App = () => {
             style={{
               flexDirection: 'row',
               justifyContent: 'space-around',
-              marginTop: 65,
+              marginTop: 35,
               marginBottom: 18,
             }}>
             <TouchableOpacity
@@ -178,7 +178,7 @@ const App = () => {
                             marginLeft: 'auto',
                           },
                         ]}>
-                        Cf: {e.confidence.toFixed(3)}%
+                        Cf: {(e.confidence * 100).toFixed(2)}%
                       </Text>
                     </View>
                   ))}
@@ -188,15 +188,13 @@ const App = () => {
             <View
               style={{
                 color: 'white',
-                justifyContent: 'center',
                 alignSelf: 'center',
-
                 flex: 1,
               }}>
               <Text
                 style={{
                   color: 'white',
-                  marginTop: -80,
+                  marginTop: 80,
                   fontSize: 38,
                   fontWeight: '700',
                   textAlign: 'center',
@@ -249,15 +247,14 @@ const styles = StyleSheet.create({
   frame: {
     width: 300,
     height: 250,
-    backgroundColor: 'red',
-    borderWidth: 8,
+    borderWidth: 4,
     borderRadius: 15,
     borderColor: 'black',
     marginTop: 35,
     alignSelf: 'center',
   },
   btn: {
-    paddingHorizontal: 18,
+    paddingHorizontal: 37,
     paddingVertical: 13,
     borderRadius: 15,
     backgroundColor: 'orange',
