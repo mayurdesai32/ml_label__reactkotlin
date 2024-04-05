@@ -45,7 +45,7 @@ const App = () => {
 
   const backgroundStyle = {
     // flex: 1,
-    // backgroundColor: 'red',
+    backgroundColor: 'black',
   };
   const onPressHandler = async selectOption => {
     try {
@@ -75,30 +75,61 @@ const App = () => {
   useEffect(() => {
     setTimeout(() => {
       setSplash(false);
-    }, 2000);
+    }, 900);
   }, []);
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar barStyle={'light-content'} backgroundColor={'black'} />
 
-      <ImageBackground
+      {/* <ImageBackground
         source={require('./assert/brick1.jpg')}
         resizeMode="cover"
         style={styles.imageBg}
-      />
+      /> */}
 
       {splash ? (
         <View style={styles.splash}>
+          <Image
+            style={{
+              marginTop: '-35%',
+              height: 150,
+              width: 150,
+              borderRadius: 20,
+              marginBottom: 20,
+              alignSelf: 'center',
+            }}
+            source={
+              selectImage ? {uri: selectImage} : require('./assert/empty.jpg')
+            }
+            resizeMode="contain"
+          />
+
           <Text style={styles.splashText}>MD IMAGE LABEL</Text>
         </View>
       ) : (
         <View style={styles.container}>
-          <Image
-            style={styles.frame}
-            source={
-              selectImage ? {uri: selectImage} : require('./assert/empty.jpg')
-            }
-          />
+          <View>
+            <Text
+              style={{
+                color: 'white',
+                textAlign: 'center',
+                fontSize: 30,
+                fontWeight: '800',
+                marginTop: 15,
+              }}>
+              MD IMAGE LABEL
+            </Text>
+          </View>
+
+          <View style={styles.frame}>
+            <Image
+              style={styles.frameImage}
+              source={
+                selectImage ? {uri: selectImage} : require('./assert/empty.jpg')
+              }
+              resizeMode="contain"
+            />
+          </View>
           <View
             style={{
               flexDirection: 'row',
@@ -156,10 +187,11 @@ const App = () => {
                       style={{
                         flexDirection: 'row',
                         paddingLeft: 2,
-                        borderWidth: 1,
+                        borderBottomWidth: 1,
+
                         borderColor: 'white',
-                        // justifyContent: 'space-between',
                         paddingRight: 15,
+                        alignContent: 'center',
                       }}>
                       <Text style={styles.resultText}>{i + 1}</Text>
                       <Text
@@ -174,7 +206,7 @@ const App = () => {
                           styles.resultText,
                           {
                             textAlign: 'right',
-                            backgroundColor: 'red',
+                            // backgroundColor: 'red',
                             marginLeft: 'auto',
                           },
                         ]}>
@@ -225,7 +257,7 @@ const styles = StyleSheet.create({
   splashText: {
     // flex: 1,
     alignSelf: 'center',
-    backgroundColor: 'white',
+    // backgroundColor: 'white',
     paddingHorizontal: 28,
     paddingVertical: 20,
     paddingTop: 35,
@@ -245,14 +277,23 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   frame: {
+    // width: 300,
+    // height: 250,
+    borderWidth: 6,
+    borderRadius: 15,
+    borderColor: 'white',
+    marginTop: 20,
+    alignSelf: 'center',
+    // paddingVertical: 300,
+    borderStyle: 'dashed',
+  },
+
+  frameImage: {
     width: 300,
     height: 250,
-    borderWidth: 4,
-    borderRadius: 15,
-    borderColor: 'black',
-    marginTop: 35,
-    alignSelf: 'center',
+    margin: 20,
   },
+
   btn: {
     paddingHorizontal: 37,
     paddingVertical: 13,
@@ -262,16 +303,18 @@ const styles = StyleSheet.create({
     alignItem: 'center',
   },
   scrollView: {
+    overFlow: 'hidden',
     marginVertical: 20,
     backgroundColor: 'black',
     width: width - 30,
     borderWidth: 1,
     borderColor: 'white',
+    borderRadius: 10,
   },
   resultText: {
     color: 'white',
     fontSize: 20,
-    marginTop: 20,
+    marginVertical: 15,
     paddingLeft: 20,
   },
 });
