@@ -19,12 +19,19 @@ import {
   ImageBackground,
   Dimensions,
   TouchableOpacity,
+  PermissionsAndroid,
   Image,
 } from 'react-native';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import ImageLabeling from '@react-native-ml-kit/image-labeling';
 import Toast from 'react-native-toast-message';
 const {width, height} = Dimensions.get('window');
+import {
+  responsiveHeight,
+  responsiveWidth,
+  responsiveFontSize,
+} from 'react-native-responsive-dimensions';
+
 const App = () => {
   // let landscape = height < width;
   // console.log('landscape', landscape);
@@ -43,21 +50,55 @@ const App = () => {
     includeBase64: true,
   };
 
-  const backgroundStyle = {
-    // flex: 1,
-    backgroundColor: 'black',
-  };
-  const onPressHandler = async selectOption => {
-    try {
-      let tempresult;
-      if (selectOption === 'camera') {
-        tempresult = await launchCamera(CameraOptions);
+  const verifyPermissions = async (type = 'CAMERA') => {
+    let status;
+
+    if (type === 'CAMERA') {
+      // status = await request(PERMISSIONS.ANDROID.CAMERA);
+      status = 'granted';
+    } else if (type === 'IMAGEGALLERY') {
+      status = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+      );
+      console.log('permission', status);
+    }
+
+    if (status === 'granted' || status == PermissionsAndroid.RESULTS.GRANTED) {
+      console.log(1);
+      if (type === 'CAMERA') {
+        return await launchCamera(CameraOptions);
       } else {
-        tempresult = await launchImageLibrary(gallaryOptions);
+        return await launchImageLibrary(gallaryOptions);
       }
-      setSelectImage(tempresult.assets[0].uri);
-      const labels = await ImageLabeling.label(tempresult.assets[0].uri);
-      setResult(labels);
+    } else if (
+      status == 'denied' ||
+      status == PermissionsAndroid.RESULTS.DENIED
+    ) {
+      showToast(`please allow the permission to access the ${type} `);
+      return null;
+    } else if (
+      status == 'blocked' ||
+      status == PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
+    ) {
+      showToast(` please allow the permission to access the ${type} `);
+      return null;
+    } else if (status == 'unavaiable') {
+      showToast(`Something Went Wrong as it showing ${type} not avaiable`);
+      return null;
+    }
+  };
+
+  const onPressHandler = async selectOption => {
+    console.log(selectOption);
+    try {
+      let tempresult = await verifyPermissions(selectOption);
+
+      if (tempresult) {
+        console.log(tempresult);
+        setSelectImage(tempresult.assets[0].uri);
+        const labels = await ImageLabeling.label(tempresult.assets[0].uri);
+        setResult(labels);
+      }
     } catch (error) {
       console.log(error);
       showToast('Something Went Wrong');
@@ -68,7 +109,7 @@ const App = () => {
     Toast.show({
       type: 'error',
       text1: text,
-      text2: 'Please Try Again Later',
+      // text2: 'Please Try Again Later',
     });
   };
 
@@ -78,33 +119,20 @@ const App = () => {
     }, 900);
   }, []);
   return (
-    <SafeAreaView style={backgroundStyle}>
+    <SafeAreaView style={styles.backgroundStyle}>
       <StatusBar barStyle={'light-content'} backgroundColor={'black'} />
-
-      {/* <ImageBackground
-        source={require('./assert/brick1.jpg')}
-        resizeMode="cover"
-        style={styles.imageBg}
-      /> */}
-
       {splash ? (
         <View style={styles.splash}>
           <Image
-            style={{
-              marginTop: '-35%',
-              height: 150,
-              width: 150,
-              borderRadius: 20,
-              marginBottom: 20,
-              alignSelf: 'center',
-            }}
+            style={styles.splashImg}
             source={
-              selectImage ? {uri: selectImage} : require('./assert/empty.jpg')
+              selectImage ? {uri: selectImage} : require('./assert/empty1.png')
             }
             resizeMode="contain"
           />
-
-          <Text style={styles.splashText}>MD IMAGE LABEL</Text>
+          <View style={{borderWidth: 7, borderColor: 'red'}}>
+            <Text style={styles.splashText}>MD IMAGE LABEL</Text>
+          </View>
         </View>
       ) : (
         <View style={styles.container}>
@@ -113,9 +141,9 @@ const App = () => {
               style={{
                 color: 'white',
                 textAlign: 'center',
-                fontSize: 30,
+                fontSize: responsiveFontSize(4.5),
                 fontWeight: '800',
-                marginTop: 15,
+                marginTop: responsiveHeight(3.5),
               }}>
               MD IMAGE LABEL
             </Text>
@@ -125,43 +153,25 @@ const App = () => {
             <Image
               style={styles.frameImage}
               source={
-                selectImage ? {uri: selectImage} : require('./assert/empty.jpg')
+                selectImage
+                  ? {uri: selectImage}
+                  : require('./assert/empty1.png')
               }
               resizeMode="contain"
             />
           </View>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-around',
-              marginTop: 35,
-              marginBottom: 18,
-            }}>
+          <View style={styles.btnContainer}>
             <TouchableOpacity
               activeOpacity={0.7}
               style={styles.btn}
-              onPress={() => onPressHandler('gallery')}>
-              <Text
-                style={{
-                  textAlign: 'center',
-                  color: '#fff',
-                  fontSize: 20,
-                }}>
-                Gallery
-              </Text>
+              onPress={() => onPressHandler('IMAGEGALLERY')}>
+              <Text style={styles.btnText}>Gallery</Text>
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.7}
               style={styles.btn}
-              onPress={() => onPressHandler('camera')}>
-              <Text
-                style={{
-                  textAlign: 'center',
-                  color: '#fff',
-                  fontSize: 20,
-                }}>
-                Camera
-              </Text>
+              onPress={() => onPressHandler('CAMERA')}>
+              <Text style={styles.btnText}>Camera</Text>
             </TouchableOpacity>
           </View>
 
@@ -170,9 +180,10 @@ const App = () => {
               <View>
                 <Text
                   style={{
+                    // marginTop: responsiveHeight(2),
                     textAlign: 'center',
                     color: '#fff',
-                    fontSize: 30,
+                    fontSize: responsiveFontSize(4),
                     fontWeight: '900',
                   }}>
                   Predicted Result
@@ -186,11 +197,9 @@ const App = () => {
                       key={i}
                       style={{
                         flexDirection: 'row',
-                        paddingLeft: 2,
                         borderBottomWidth: 1,
-
                         borderColor: 'white',
-                        paddingRight: 15,
+                        paddingRight: responsiveWidth(1.5),
                         alignContent: 'center',
                       }}>
                       <Text style={styles.resultText}>{i + 1}</Text>
@@ -206,7 +215,6 @@ const App = () => {
                           styles.resultText,
                           {
                             textAlign: 'right',
-                            // backgroundColor: 'red',
                             marginLeft: 'auto',
                           },
                         ]}>
@@ -221,13 +229,13 @@ const App = () => {
               style={{
                 color: 'white',
                 alignSelf: 'center',
+                justifyContent: 'center',
                 flex: 1,
               }}>
               <Text
                 style={{
                   color: 'white',
-                  marginTop: 80,
-                  fontSize: 38,
+                  fontSize: responsiveFontSize(5),
                   fontWeight: '700',
                   textAlign: 'center',
                 }}>
@@ -243,79 +251,110 @@ const App = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    alignSelf: 'center',
+  backgroundStyle: {
+    backgroundColor: 'black',
   },
 
   splash: {
     // flex: 1,
-    width: '100%',
-    height: '100%',
+    width: responsiveWidth(100),
+    height: responsiveHeight(100),
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    alignItems: 'center',
+    paddingHorizontal: responsiveWidth(5),
+  },
+
+  splashImg: {
+    marginTop: responsiveHeight(-12),
+    height: responsiveWidth(45),
+    width: responsiveWidth(50),
+    borderRadius: responsiveWidth(5),
+    marginBottom: responsiveHeight(4),
+    alignSelf: 'center',
   },
   splashText: {
     // flex: 1,
     alignSelf: 'center',
-    // backgroundColor: 'white',
-    paddingHorizontal: 28,
-    paddingVertical: 20,
-    paddingTop: 35,
-    borderWidth: 8,
-    borderColor: 'red',
+    paddingHorizontal: responsiveWidth(7),
+    paddingVertical: responsiveHeight(2),
     color: 'red',
-    fontSize: 30,
+    fontSize: responsiveFontSize(3.7),
     fontWeight: '700',
     textAlign: 'center',
+  },
+
+  container: {
+    width: '100%',
+    height: '100%',
+    alignSelf: 'center',
   },
 
   imageBg: {
     position: 'absolute',
     justifyContent: 'center',
     zIndex: 0,
-    width: '100%',
-    height: '100%',
+    width: responsiveWidth(100),
+    height: responsiveHeight(100),
   },
   frame: {
     // width: 300,
     // height: 250,
+    backgroundColor: 'black',
     borderWidth: 6,
-    borderRadius: 15,
+    borderRadius: responsiveWidth(6),
     borderColor: 'white',
-    marginTop: 20,
+    marginTop: responsiveHeight(5),
     alignSelf: 'center',
     // paddingVertical: 300,
     borderStyle: 'dashed',
   },
 
   frameImage: {
-    width: 300,
-    height: 250,
-    margin: 20,
+    borderWidth: 6,
+    borderRadius: responsiveWidth(6),
+    width: responsiveWidth(65),
+    height: responsiveHeight(28),
+    margin: responsiveHeight(2.8),
   },
 
+  btnContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: responsiveHeight(5),
+    marginBottom: responsiveHeight(4),
+    paddingHorizontal: responsiveWidth(7),
+  },
   btn: {
-    paddingHorizontal: 37,
-    paddingVertical: 13,
-    borderRadius: 15,
+    paddingHorizontal: responsiveWidth(9),
+    paddingVertical: responsiveHeight(1.9),
+    borderRadius: responsiveWidth(4),
     backgroundColor: 'orange',
     justifyContent: 'center',
     alignItem: 'center',
   },
+  btnText: {
+    textAlign: 'center',
+    color: 'black',
+    fontSize: responsiveFontSize(3.2),
+    fontWeight: '700',
+  },
+
   scrollView: {
     overFlow: 'hidden',
-    marginVertical: 20,
+    marginVertical: responsiveHeight(2),
     backgroundColor: 'black',
-    width: width - 30,
-    borderWidth: 1,
+    width: responsiveWidth(90),
+    borderWidth: 3,
     borderColor: 'white',
-    borderRadius: 10,
+    borderStyle: 'dotted',
+    borderRadius: responsiveWidth(2),
+    alignSelf: 'center',
   },
   resultText: {
     color: 'white',
-    fontSize: 20,
-    marginVertical: 15,
-    paddingLeft: 20,
+    fontSize: responsiveFontSize(2.5),
+    marginVertical: responsiveHeight(1.9),
+    paddingLeft: responsiveWidth(4),
   },
 });
 
