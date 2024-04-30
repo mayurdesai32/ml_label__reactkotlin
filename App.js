@@ -14,18 +14,14 @@ import {
   StatusBar,
   StyleSheet,
   Text,
-  useColorScheme,
   View,
-  ImageBackground,
-  Dimensions,
   TouchableOpacity,
-  PermissionsAndroid,
   Image,
 } from 'react-native';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import ImageLabeling from '@react-native-ml-kit/image-labeling';
 import Toast from 'react-native-toast-message';
-const {width, height} = Dimensions.get('window');
+
 import {
   responsiveHeight,
   responsiveWidth,
@@ -38,65 +34,32 @@ const App = () => {
   const [selectImage, setSelectImage] = useState(null);
   const [result, setResult] = useState(null);
   const [splash, setSplash] = useState(true);
-  const gallaryOptions = {
-    selectionLimit: 1,
-    mediaType: 'photo',
-    includeBase64: true,
-  };
-  const CameraOptions = {
-    // saveToPhotos:1,
-    cameraType: 'front',
-    mediaType: 'photo',
-    includeBase64: true,
-  };
 
-  const verifyPermissions = async (type = 'CAMERA') => {
-    let status;
-
-    if (type === 'CAMERA') {
-      // status = await request(PERMISSIONS.ANDROID.CAMERA);
-      status = 'granted';
-    } else if (type === 'IMAGEGALLERY') {
-      status = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-      );
-      console.log('permission', status);
-    }
-
-    if (status === 'granted' || status == PermissionsAndroid.RESULTS.GRANTED) {
-      console.log(1);
-      if (type === 'CAMERA') {
-        return await launchCamera(CameraOptions);
-      } else {
-        return await launchImageLibrary(gallaryOptions);
-      }
-    } else if (
-      status == 'denied' ||
-      status == PermissionsAndroid.RESULTS.DENIED
-    ) {
-      showToast(`please allow the permission to access the ${type} `);
-      return null;
-    } else if (
-      status == 'blocked' ||
-      status == PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
-    ) {
-      showToast(` please allow the permission to access the ${type} `);
-      return null;
-    } else if (status == 'unavaiable') {
-      showToast(`Something Went Wrong as it showing ${type} not avaiable`);
-      return null;
-    }
-  };
-
-  const onPressHandler = async selectOption => {
-    console.log(selectOption);
+  const onPressHandler = async type => {
+    console.log(type);
     try {
-      let tempresult = await verifyPermissions(selectOption);
+      const gallaryOptions = {
+        selectionLimit: 1,
+        mediaType: 'photo',
+        includeBase64: true,
+      };
+      const CameraOptions = {
+        // saveToPhotos:1,
+        cameraType: 'front',
+        mediaType: 'photo',
+        includeBase64: true,
+      };
+
+      if (type === 'CAMERA') {
+        tempresult = await launchCamera(CameraOptions);
+      } else if (type === 'IMAGEGALLERY') {
+        tempresult = await launchImageLibrary(gallaryOptions);
+      }
 
       if (tempresult) {
-        console.log(tempresult);
         setSelectImage(tempresult.assets[0].uri);
         const labels = await ImageLabeling.label(tempresult.assets[0].uri);
+        console.log(labels);
         setResult(labels);
       }
     } catch (error) {
@@ -176,54 +139,75 @@ const App = () => {
           </View>
 
           {result ? (
-            <>
-              <View>
+            result.length === 0 ? (
+              <View
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  flex: 1,
+                }}>
                 <Text
-                  style={{
-                    // marginTop: responsiveHeight(2),
-                    textAlign: 'center',
-                    color: '#fff',
-                    fontSize: responsiveFontSize(4),
-                    fontWeight: '900',
-                  }}>
-                  Predicted Result
+                  style={[
+                    styles.resultText,
+                    {
+                      textTransform: 'uppercase',
+                      fontSize: responsiveFontSize(3),
+                      fontWeight: '700',
+                    },
+                  ]}>
+                  Cant detect object
                 </Text>
               </View>
-              <ScrollView vertical={true} style={styles.scrollView}>
-                {result
-                  .filter(e => e.confidence > 0.5)
-                  .map((e, i) => (
-                    <View
-                      key={i}
-                      style={{
-                        flexDirection: 'row',
-                        borderBottomWidth: 1,
-                        borderColor: 'white',
-                        paddingRight: responsiveWidth(1.5),
-                        alignContent: 'center',
-                      }}>
-                      <Text style={styles.resultText}>{i + 1}</Text>
-                      <Text
-                        style={[
-                          styles.resultText,
-                          {textTransform: 'uppercase'},
-                        ]}>
-                        {e.text}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.resultText,
-                          {
-                            textAlign: 'right',
-                            marginLeft: 'auto',
-                          },
-                        ]}>
-                        Cf: {(e.confidence * 100).toFixed(2)}%
-                      </Text>
-                    </View>
-                  ))}
-              </ScrollView>
-            </>
+            ) : (
+              <>
+                <View>
+                  <Text
+                    style={{
+                      // marginTop: responsiveHeight(2),
+                      textAlign: 'center',
+                      color: '#fff',
+                      fontSize: responsiveFontSize(4),
+                      fontWeight: '900',
+                    }}>
+                    Predicted Result
+                  </Text>
+                </View>
+                <ScrollView vertical={true} style={styles.scrollView}>
+                  {result
+                    .filter(e => e.confidence > 0.5)
+                    .map((e, i) => (
+                      <View
+                        key={i}
+                        style={{
+                          flexDirection: 'row',
+                          borderBottomWidth: 1,
+                          borderColor: 'white',
+                          paddingRight: responsiveWidth(1.5),
+                          alignContent: 'center',
+                        }}>
+                        <Text style={styles.resultText}>{i + 1}</Text>
+                        <Text
+                          style={[
+                            styles.resultText,
+                            {textTransform: 'uppercase'},
+                          ]}>
+                          {e.text}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.resultText,
+                            {
+                              textAlign: 'right',
+                              marginLeft: 'auto',
+                            },
+                          ]}>
+                          Cf: {(e.confidence * 100).toFixed(2)}%
+                        </Text>
+                      </View>
+                    ))}
+                </ScrollView>
+              </>
+            )
           ) : (
             <View
               style={{
@@ -303,7 +287,7 @@ const styles = StyleSheet.create({
     borderWidth: 6,
     borderRadius: responsiveWidth(6),
     borderColor: 'white',
-    marginTop: responsiveHeight(5),
+    marginTop: responsiveHeight(3.5),
     alignSelf: 'center',
     // paddingVertical: 300,
     borderStyle: 'dashed',
@@ -312,21 +296,21 @@ const styles = StyleSheet.create({
   frameImage: {
     borderWidth: 6,
     borderRadius: responsiveWidth(6),
-    width: responsiveWidth(65),
-    height: responsiveHeight(28),
+    width: responsiveWidth(64),
+    height: responsiveHeight(26),
     margin: responsiveHeight(2.8),
   },
 
   btnContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: responsiveHeight(5),
-    marginBottom: responsiveHeight(4),
+    marginTop: responsiveHeight(4),
+    marginBottom: responsiveHeight(2.5),
     paddingHorizontal: responsiveWidth(7),
   },
   btn: {
     paddingHorizontal: responsiveWidth(9),
-    paddingVertical: responsiveHeight(1.9),
+    paddingVertical: responsiveHeight(1.7),
     borderRadius: responsiveWidth(4),
     backgroundColor: 'orange',
     justifyContent: 'center',
@@ -353,8 +337,8 @@ const styles = StyleSheet.create({
   resultText: {
     color: 'white',
     fontSize: responsiveFontSize(2.5),
-    marginVertical: responsiveHeight(1.9),
-    paddingLeft: responsiveWidth(4),
+    marginVertical: responsiveHeight(1.8),
+    paddingLeft: responsiveWidth(3.8),
   },
 });
 
